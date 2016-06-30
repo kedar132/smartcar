@@ -24,7 +24,9 @@ router.get('/vehicles/:id', vehicles);
 router.get('/vehicles/:id/doors', vehicles);
 router.get('/vehicles/:id/fuel', vehicles);
 router.get('/vehicles/:id/battery', vehicles);
+router.post('/vehicles/:id/engine', vehicles);
 
 
 app.use('/', router);
+module.exports = app;
 

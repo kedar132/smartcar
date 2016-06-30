@@ -1,127 +1,179 @@
 var express = require('express');
 var router = express.Router();
 var request = require('request');
+var app = express();
+var gm_uri = "http://gmapi.azurewebsites.net";
+
+
+
+/*
+To get the Vehicle Info Services   
+*/
 
 router.get('/vehicles/:id', function(req, res) {
 	request.post(
-		'http://gmapi.azurewebsites.net/getVehicleInfoService',
+		gm_uri+'/getVehicleInfoService',
 		{json:{id:req.params.id,responseType:'JSON'}},
 		
 		function(error, response, body){
-			var acquiredGM = body;
-			 if (!body) return res.sendStatus(400);
+			 if (!body | error) return res.sendStatus(400);
 			 var doors=0;
-			 if(body.data.fourDoorSedan.value){
+			 if(body.data.fourDoorSedan.value=='True'){
 			 	doors=4; 
 			 }
 			 else{
 			 	doors=2;
 			 }
-  			var toSend = JSON.parse('{"vin" : '+'"' + body.data.vin.value + '","color":'+'"' + body.data.color.value + '","doors": '+'"' + doors + '","driveTrain":'+'"' + body.data.driveTrain.value + '"}');
-			
-			res.send(toSend);
+			 var a ={};
+			 a["vin"]         = body.data.vin.value;
+			 a["color"]       = body.data.color.value;
+			 a["Door Count"]	      = doors;
+			 a["driveTrain"]  = body.data.driveTrain.value;	
+			res.json(a);
 			
 		}
 
 		);
-
-  
 });
+
+
+
+
+
+/*
+To get the Vehicle Security   
+*/
+
 
 router.get('/vehicles/:id/doors', function(req, res) {
 	request.post(
-		'http://gmapi.azurewebsites.net/getSecurityStatusService',
+		gm_uri+'/getSecurityStatusService',
 		{json:{id:req.params.id,responseType:'JSON'}},
 		
 		function(error, response, body){
 			var acquiredGM = body;
-			 if (!body) return res.sendStatus(400);
+			 if (!body | error) return res.sendStatus(400);
 			 
 			 var s = body.data.doors.values;
-			//  var jsons=[];
-			// for (var i=s.length;i--;) jsons[i]=JSON.stringify(s[i]);
-			//  // var json = JSON.stringify(s);
-			//  // var jsons = s.map(JSON.stringify);
-			 var A = [];
-			
-			
-  			 // var toSend = JSON.parse(body.data.doors.values);
-  			 var txt="";
-			for(var i=0;i<s.length;i++){
-				
-				if(i!=0){
-					txt = txt+',';
-				}
-				else{
-					txt = txt+'[';
-				}
-				txt =txt+'{"location":'+'"'+s[i].location.value +'","locked":'+'"'+s[i].locked.value +'"}';
-				
-				//txt.replace(/@"\\"/g,/@"\\"/);
-				console.log(txt);
-				
-
+			 var a = [];
+				for(var i=0;i<s.length;i++){
+				var b ={};
+					b["location"] = s[i].location.value;
+					var x = s[i].locked.value;
+					var z = false;
+					if(x=="True"){
+						z = true;
+					}
+					b["locked"]   = z;
+					a = a.concat(b);
 			}
+			res.json(a);
 			
-			txt=txt+']';
-			console.log("this is tits"+txt);
-			
-			//var myJsonString = JSON.stringify(A);
-			 //  var test1 = '[{"location":"frontLeft","loacked":"true"},{"location":"frontRight","loacked":"true"}]';
-			 // console.log("this is testundefined"+test1);
-			//var json = JSON.stringify(A);
-			//console.log(A);
-			res.send(JSON.parse(txt));
-			
-		}
-
-		);
+		});
 
   
 });
 
+
+
+
+
+
+/*
+To get the Vehicle Fuel Percentage 
+*/
 
 
 router.get('/vehicles/:id/fuel', function(req, res) {
 	request.post(
-		'http://gmapi.azurewebsites.net/getEnergyService',
+		gm_uri+'/getEnergyService',
 		{json:{id:req.params.id,responseType:'JSON'}},
 		
 		function(error, response, body){
-			var acquiredGM = body;
-			 if (!body) return res.sendStatus(400);
+			if (!body | error) return res.sendStatus(400);
 			
-  			var toSend = JSON.parse('{"percent" : '+'"' + body.data.tankLevel.value +'"}');
+			var x = body.data.tankLevel.value;
+			var a ={};
+			a["percent"] = parseInt(x);
+			res.json(a);
 			
-			res.send(toSend);
-			
-		}
+		});
 
-		);
-
-  
 });
 
+
+
+
+
+
+/*
+To get the Vehicle Battery Percentage 
+*/
 
 
 
 router.get('/vehicles/:id/battery', function(req, res) {
 	request.post(
-		'http://gmapi.azurewebsites.net/getEnergyService',
-		{json:{id:req.params.id,responseType:'JSON'}},
+		gm_uri+'/getEnergyService',
+			{json:{id:req.params.id,responseType:'JSON'}},
 		
-		function(error, response, body){
+			function(error, response, body){
 			
-			if (!body) return res.sendStatus(400);
+				if (!body | error) return res.sendStatus(400);
+				
+				var a = {};
+				var x = body.data.batteryLevel.value;
+				a["percent"] = parseInt(x);
+				res.json(a);
 			
-  			var toSend = JSON.parse('{"percent" : '+'"' + body.data.batteryLevel.value +'"}');
-			
-			res.send(toSend);
-			
-		}
+		});
 
-		);
+});
 
+
+
+
+
+
+/*
+To Post actions START or STOP to the GMServer 
+*/
+
+
+
+router.post('/vehicles/:id/engine', function(req, res) {
+	var check;
+	//console.log(req.body.action);
+	if(req.body.action=="START"){
+		
+		check = "START_VEHICLE";
+	}
+	else{
+		
+		check = "STOP_VEHICLE";
+	}
+	request.post(
+		gm_uri+'/actionEngineService',
+		{json:{id:req.params.id,command:check,responseType:'JSON'}},
+		
+			function(error, response, body){
+			
+			if (!body || error) return res.sendStatus(400);
+			var result = body.actionResult.status;
+			var status;
+			var a ={};
+
+			if(result=="EXECUTED"){
+				status = "success";
+			}
+			else{
+				status = "error";
+			}
+
+			a["status"] = status;
+			res.json(a);
+			
+		});
   
 });
 
