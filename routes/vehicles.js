@@ -16,7 +16,7 @@ router.get('/vehicles/:id', function(req, res) {
 		{json:{id:req.params.id,responseType:'JSON'}},
 		
 		function(error, response, body){
-			 if (!body | error) return res.sendStatus(400);
+			 if (!body || error) return res.sendStatus(400);
 			 var doors=0;
 			 if(body.data.fourDoorSedan.value=='True'){
 			 	doors=4; 
@@ -52,7 +52,7 @@ router.get('/vehicles/:id/doors', function(req, res) {
 		
 		function(error, response, body){
 			var acquiredGM = body;
-			 if (!body | error) return res.sendStatus(400);
+			 if (!body || error) return res.sendStatus(400);
 			 
 			 var s = body.data.doors.values;
 			 var a = [];
@@ -90,7 +90,7 @@ router.get('/vehicles/:id/fuel', function(req, res) {
 		{json:{id:req.params.id,responseType:'JSON'}},
 		
 		function(error, response, body){
-			if (!body | error) return res.sendStatus(400);
+			if (!body || error) return res.sendStatus(400);
 			
 			var x = body.data.tankLevel.value;
 			var a ={};
@@ -119,7 +119,7 @@ router.get('/vehicles/:id/battery', function(req, res) {
 		
 			function(error, response, body){
 			
-				if (!body | error) return res.sendStatus(400);
+				if (!body || error) return res.sendStatus(400);
 				
 				var a = {};
 				var x = body.data.batteryLevel.value;
